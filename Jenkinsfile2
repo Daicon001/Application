@@ -1,7 +1,7 @@
 pipeline{
     agent any
     environment {
-        DOCKER_USER     = credentials('dockeruser')
+        DOCKER_USER     = credentials('dockerUsername')
         DOCKER_PASSWORD = credentials('dockerPwd')
     }
     stages {
@@ -13,7 +13,7 @@ pipeline{
         }
         stage('DockerBuild'){
             steps{
-                sh 'bash && docker build -t cloudhight/pipeline:1.0.11 .'
+                sh 'bash && docker build -t daicon001/pipeline:1.0.11 .'
             }
         }
         stage('DockerLogin') {
@@ -23,13 +23,13 @@ pipeline{
         }
         stage('DockerPush') {
             steps{
-                sh 'docker push cloudhight/pipeline:1.0.11'
+                sh 'docker push daicon001/pipeline:1.0.11'
             }
         }
         stage('Deploy') {
              steps {
                sshagent (['ansible_creds']) {
-                   sh 'ssh -t -t ec2-user@10.0.3.154 -o strictHostKeyChecking=no "cd /etc/ansible && ansible-playbook MyPlaybook.yaml"'
+                   sh 'ssh -t -t ec2-user@52.41.154.250 -o strictHostKeyChecking=no "cd /etc/ansible && ansible-playbook /opt/auto-discovery/run.yml"'
                 }
             }
         }
