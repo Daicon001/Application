@@ -1,5 +1,8 @@
 pipeline{
     agent any
+    tools {
+        maven 'maven'
+    }
     environment {
         DOCKER_USER     = credentials('dockerUsername')
         DOCKER_PASSWORD = credentials('dockerPwd')
