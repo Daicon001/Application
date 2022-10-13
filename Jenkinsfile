@@ -5,6 +5,13 @@ pipeline{
         DOCKER_PASSWORD = credentials('dockerPwd')
     }
     stages {
+        stage('Code Analysis'){
+            steps{
+                withSonarQubeEnv('sonarQube') {
+                    sh "mvn sonar:sonar"
+                }
+            }
+        }
         stage('BuildCode'){
             steps{
 
