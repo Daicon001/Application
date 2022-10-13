@@ -23,17 +23,17 @@ pipeline{
         }
         stage('DockerBuild'){
             steps{
-                sh 'bash && sudo docker build -t daicon001/pipeline:1.0.11 .'
+                sh 'bash && docker build -t daicon001/pipeline:1.0.11 .'
             }
         }
         stage('DockerLogin') {
             steps{
-                sh 'sudo docker login --username $DOCKER_USER --password $DOCKER_PASSWORD'
+                sh 'docker login --username $DOCKER_USER --password $DOCKER_PASSWORD'
             }
         }
         stage('DockerPush') {
             steps{
-                sh 'sudo docker push daicon001/pipeline:1.0.11'
+                sh 'docker push daicon001/pipeline:1.0.11'
             }
         }
         stage('Deploy') {
