@@ -23,7 +23,7 @@ pipeline{
         }
         stage('DockerBuild'){
             steps{
-                sh 'bash && docker build -t daicon001/pipeline:1.0.11 .'
+                sh 'docker build -t daicon001/pipeline:1.0.11 .'
             }
         }
         stage('DockerLogin') {
