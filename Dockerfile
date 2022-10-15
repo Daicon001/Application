@@ -13,4 +13,4 @@ ENV NEW_RELIC_LOG_FILE_NAME=STDOUT
 ENV NEW_RELIC_LICENCE_KEY="eu01xx11b9228cd1071fed3b8e7b7658ee5bNRAL"
 WORKDIR  /usr/local/tomcat/webapps
 RUN pwd && ls -al
-ENTRYPOINT ["java", "-javaagent:/usr/local/tomcat/webapps/newrelic/newrelic.jar", "-jar", "spring-petclinic-2.4.2.war", "--server.port=8085"]
+ENTRYPOINT ["java", "-javaagent:/usr/local/tomcat/webapps/newrelic/newrelic.jar", "-jar", "spring.profiles.active=mysql", "spring-petclinic-2.4.2.war", "--server.port=8085"]
