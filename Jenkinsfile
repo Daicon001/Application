@@ -39,7 +39,7 @@ pipeline{
         stage('Deploy') {
              steps {
                sshagent (['ansible_creds']) {
-                   sh 'ssh -t -t ec2-user@10.0.3.184 -o strictHostKeyChecking=no "cd /etc/ansible && ansible-playbook /opt/auto-discovery/run.yml"'
+                   sh 'ssh -t -t ec2-user@10.0.3.104 -o strictHostKeyChecking=no "cd /etc/ansible && ansible-playbook /opt/auto-discovery/run.yml"'
                 }
             }
         }
