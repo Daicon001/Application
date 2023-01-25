@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven'
+    }
+    stages {
+        stage ('Git Pull') {
+            steps {
+                git branch: 'main', credentialsId: 'GIt-Credential', url: 'https://github.com/Daicon001/Application'
+            }
+        }
+        stage ('Build'){
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+        stage ('Third Stage') {
+            steps {
+                echo 'this is third stage'
+            }
+        }
+    }
+}
