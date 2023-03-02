@@ -1,0 +1,72 @@
+pipeline {
+    agent any 
+    tools {
+        maven 'maven'
+    } 
+    stages {
+        stage('Git Pull'){
+            steps{
+                git branch: 'main', credentialsId: 'git-credentials', url: 'https://github.com/CloudHight/Pet-Adoption-Containerisation-Project-Application-Day-Team--06-Feb.git'
+            }
+        } 
+        stage('sonar'){
+            steps{
+                withSonarQubeEnv('sonar'){
+                    sh 'mvn sonar:sonar'
+                }
+            } 
+        } 
+        stage('build'){
+            steps{
+                sh 'mvn clean install'
+            }
+        } 
+        stage('Send Artifacts'){
+            steps{
+                sshagent(['jenkins-key']) {
+                    sh 'scp -o StrictHostKeyChecking=no /var/lib/jenkins/workspace/day/target/spring-petclinic-2.4.2.war ec2-user@18.132.47.11:/opt/docker'
+                }
+            }
+        } 
+        stage('Deploy to QA'){
+            steps{
+                sshagent(['jenkins-key']) {
+                   sh 'ssh -t -t ec2-user@18.132.47.11 -o StrictHostKeyChecking=no " ansible-playbook /opt/docker/docker-image.yml"'  
+                   sh 'ssh -t -t ec2-user@18.132.47.11 -o StrictHostKeyChecking=no " ansible-playbook /opt/docker/docker-containerQA.yml"'
+                   sh 'ssh -t -t ec2-user@18.132.47.11 -o StrictHostKeyChecking=no " ansible-playbook /opt/docker/newrelic.yml"' 
+                }
+            }
+        } 
+        stage('send email & Slack Notification'){
+            steps{
+                emailext body: 'Code was built', subject: 'Successfully Deployed to QA Env', to: 'pharmtim11@gmail.com' 
+                slackSend channel: 'jenkins-build', message: 'prod code ', teamDomain: 'testing-tim', tokenCredentialId: 'slack-credentials'
+            }
+        } 
+        stage('Request for Approval'){
+            steps{
+                timeout(activity: true, time: 5){ 
+                    input message: 'Needs Approval ', submitter: 'admin'
+                }
+            }
+        } 
+        stage('Deploy to prod'){
+            steps{
+                sshagent(['jenkins-key']) {
+                   sh 'ssh -t -t ec2-user@18.132.47.11 -o StrictHostKeyChecking=no " ansible-playbook /opt/docker/docker-containerPROD.yml"' 
+                   sh 'ssh -t -t ec2-user@18.132.47.11 -o StrictHostKeyChecking=no " ansible-playbook /opt/docker/newrelic.yml"'
+                }
+            }
+        } 
+    } 
+    post {
+        success {
+                emailext body: 'Code was deployed', subject: 'Successfully built', to: 'pharmtim11@gmail.com' 
+                slackSend channel: 'jenkins-build', message: 'Successfully built', teamDomain: 'testing-tim', tokenCredentialId: 'slack-credentials'
+        }
+        failure {
+                emailext body: 'Code was not deployed', subject: 'failure', to: 'pharmtim11@gmail.com' 
+                slackSend channel: 'jenkins-build', message: 'failure', teamDomain: 'testing-tim', tokenCredentialId: 'slack-credentials'
+        }
+    }
+}
