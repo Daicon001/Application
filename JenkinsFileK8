@@ -1,0 +1,53 @@
+pipeline{
+    agent any
+    
+    stages {
+        
+         stage('deploy to QA') {
+            steps{
+                sshagent (['jenkins-key']) {
+                   sh 'ssh -t -t ubuntu@10.0.3.175 -o strictHostKeyChecking=no "ansible-playbook /home/ubuntu/playbooks/QA-Deployment.yml"'
+            }
+          }
+        }
+        stage('QA notification'){
+            steps{
+                slackSend channel: 'jenkins-alert', message: 'deployment to QA successful', teamDomain: 'daiconit', tokenCredentialId: 'slack-cred'
+                emailext body: 'Deployed successfully', subject: 'Deployed to QA', to: 'oladimejiibrahim751@gmail.com'
+            }
+        }
+        stage('needs approval to deploy to prod'){
+            steps{
+               timeout(activity: true, time: 5, unit: 'DAYS') {
+                   input message: 'This needs approval to deploy to prod env', submitter: 'admin'
+                }
+            }
+        }
+        stage('Apply autodiscovery code'){
+            steps{
+               sshagent (['jenkins-key']) {
+                   sh 'ssh -t -t ubuntu@10.0.3.175 -o strictHostKeyChecking=no "ansible-playbook /home/ubuntu/playbooks/auto-descovery.yml"'
+                   sh 'ssh -t -t ubuntu@10.0.3.175 -o strictHostKeyChecking=no "ansible-playbook /home/ubuntu/playbooks/deployment.yml"'
+                }
+            }
+        }
+        stage('Deployment notification'){
+            steps{
+                slackSend channel: 'jenkins-alert', message: 'deployment to prod ok', teamDomain: 'daiconit', tokenCredentialId: 'slack-cred'
+                emailext body: 'Deployed to prod successfully', subject: 'Deployed to Prod', to: 'oladimejiibrahim751b@gmail.com'
+            }
+        }
+        
+        
+    }
+    post{
+        success{
+           slackSend channel: 'jenkins-alert', message: 'final deployment ok', teamDomain: 'daiconit', tokenCredentialId: 'slack-cred'
+           emailext body: 'Deployed successfully ok', subject: 'Final Deployed ok', to: 'oladimejiibrahim751@gmail.com' 
+        }
+        failure{
+           slackSend channel: 'jenkins-alert', message: 'fail to deploy', teamDomain: 'daiconit', tokenCredentialId: 'slack-cred'
+           emailext body: 'Fail to deploy', subject: 'Fil to deploy', to: 'oladimejiibrahim751@gmail.com' 
+        }
+    }
+}
